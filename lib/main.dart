@@ -1,8 +1,10 @@
 import 'dart:js';
 
 import 'package:english_words/english_words.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -118,39 +120,55 @@ class GeneratorPage extends StatelessWidget {
     }
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            BigCard(pair: pair),
-            SizedBox(
-              height: 10,
+        body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 30,
+            width: 200,
+            child: Card(
+              color: Colors.red,
+              //ここにテキスト入る
             ),
-            Row(
+          ),
+          Container(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
-                  },
-                  icon: Icon(icon),
-                  label: Text('Like'),
-                ),
-                ElevatedButton(
-                    onPressed: () {
-                      appState.getNext();
-                    },
-                    child: Text('Next')),
+                BigCard(pair: pair),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                        onPressed: () {
+                          appState.getNext();
+                        },
+                        icon: Icon(Icons.next_plan),
+                        label: Text('next')),
+                    ElevatedButton.icon(
+                        onPressed: () {
+                          appState.toggleFavorite();
+                        },
+                        icon: Icon(icon),
+                        label: Text('good'))
+                  ],
+                )
               ],
-            )
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
 
-class FavoritePage extends StatelessWidget {
+class FavoritePage extends StatefulWidget {
+  @override
+  State<FavoritePage> createState() => _FavoritePageState();
+}
+
+class _FavoritePageState extends State<FavoritePage> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -176,6 +194,14 @@ class FavoritePage extends StatelessWidget {
               height: 50,
               child: ListTile(
                 leading: Icon(Icons.favorite),
+                trailing: GestureDetector(
+                  child: Icon(Icons.delete_forever),
+                  onTap: () {
+                    setState(() {
+                      favoriteList.remove(list);
+                    });
+                  },
+                ),
                 title: Text('$list'),
               ),
             ),
