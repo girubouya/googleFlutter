@@ -16,8 +16,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => MyAppState()),
+        ChangeNotifierProvider(create: (context) => VisibilityState()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Namer App',
@@ -33,20 +36,40 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  Map<String, dynamic> word = {
+    "pair": WordPair.random(),
+    "opacity": 1.0,
+  };
 
   void getNext() {
-    current = WordPair.random();
+    word["pair"] = WordPair.random();
     notifyListeners();
   }
 
+  var wordLists = <Map<String, dynamic>>[];
   var favorutes = <WordPair>[];
   void toggleFavorite() {
-    if (favorutes.contains(current)) {
-      favorutes.remove(current);
+    if (favorutes.contains(word["pair"])) {
+      favorutes.remove(word["pair"]);
     } else {
-      favorutes.add(current);
+      favorutes.add(word["pair"]);
     }
+    notifyListeners();
+  }
+
+  void downOpacity(List<Map<String, dynamic>> wordLists) {
+    wordLists.asMap().forEach((key, value) {
+      value["opacity"] -= 0.2;
+    });
+    notifyListeners();
+  }
+}
+
+class VisibilityState extends ChangeNotifier {
+  var visibility = false;
+
+  void toggleVisibility() {
+    visibility = !visibility;
     notifyListeners();
   }
 }
@@ -111,38 +134,55 @@ class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var pair = appState.current;
+    var word = appState.word;
     IconData icon;
-    if (appState.favorutes.contains(pair)) {
+    if (appState.favorutes.contains(word['word'])) {
       icon = Icons.favorite;
     } else {
       icon = Icons.favorite_border;
     }
-
     return Scaffold(
-        body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: 30,
-            width: 200,
-            child: Card(
-              color: Colors.red,
-              //ここにテキスト入る
-            ),
-          ),
-          Container(
+        body: Column(
+      children: [
+        Expanded(
+          child: Container(
+              width: 150,
+              color: Colors.greenAccent,
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: 100,
+                height: (appState.wordLists.length * 20) + 20,
+                child: Container(
+                  child: ListView(
+                    reverse: false,
+                    children: [
+                      for (var word in appState.wordLists)
+                        SizedBox(
+                          height: 40,
+                          child: Card(
+                            color: Colors.redAccent,
+                            child: Text(word["pair"].toString()),
+                          ),
+                        )
+                    ],
+                  ),
+                ),
+              )),
+        ),
+        Expanded(
+          child: Container(
+            color: Colors.blueAccent,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                BigCard(pair: pair),
+                BigCard(pair: word["pair"]),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton.icon(
                         onPressed: () {
                           appState.getNext();
+                          appState.wordLists.add(word);
+                          appState.downOpacity(appState.wordLists);
                         },
                         icon: Icon(Icons.next_plan),
                         label: Text('next')),
@@ -157,8 +197,8 @@ class GeneratorPage extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     ));
   }
 }
